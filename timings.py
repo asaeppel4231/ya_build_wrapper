@@ -1,0 +1,44 @@
+import json
+import os
+from .utils import console, Panel
+
+def print_timing_summary(timings: list[tuple[str, float]]):
+    """Print timing summary."""
+    if not timings:
+        return
+
+    total = sum(t for _, t in timings)
+    avg = total / len(timings)
+    longest_title, longest_time = max(timings, key=lambda x: x[1])
+
+    console.print(
+        Panel(
+            f"Timing Summary\n\n"
+            f"Total time: {total:.2f}s\n"
+            f"Average per step: {avg:.2f}s\n"
+            f"Longest step: {longest_title} ({longest_time:.2f}s)",
+            title="Performance",
+            style="bold cyan",
+        )
+    )
+
+def write_timings(timings: list[tuple[str, float]], quiet: bool = False):
+    """Stores the execution times of the jobs as JSON."""
+    data = [
+        {"title": title, "duration": duration}
+        for title, duration in timings
+    ]
+
+    with open("job_time.json", "w") as fp:
+        json.dump(data, fp, indent=4)
+
+    if not quiet:
+        console.print("[bold green]Wrote job_time.json[/bold green]")
+
+def load_timings() -> list[dict]:
+    """Load job timing information from job_time.json."""
+    if not os.path.exists("job_time.json"):
+        return []
+
+    with open("job_time.json", "r") as fp:
+        return json.load(fp)
