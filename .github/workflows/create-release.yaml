@@ -1,0 +1,65 @@
+# AI generated
+
+name: Release
+
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            artifact_name: outkatkos-linux
+            binary_path: outkatkos.bin
+          - os: windows-latest
+            artifact_name: outkatkos-windows.exe
+            binary_path: outkatkos.exe
+          - os: macos-latest
+            artifact_name: outkatkos-macos
+            binary_path: outkatkos.bin
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Linux Dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install ccache libfuse-dev -y
+
+      - name: Install Nuitka and Zstandard
+        run: |
+          python -m pip install --upgrade pip
+          pip install nuitka zstandard
+
+      - name: Go to source folder
+        run: |
+          cd src
+      
+      - name: Compile with Nuitka
+        run: |
+          python -m nuitka --onefile --standalone -o ${{ matrix.binary_path }} builder.py --assume-yes-for-downloads
+
+      - name: Upload Binaries to Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ matrix.binary_path }}
+          asset_name: ${{ matrix.artifact_name }}
+          tag: ${{ github.ref }}
+          overwrite: true
