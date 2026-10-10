@@ -7,7 +7,7 @@
 ## Dependencies
 
 This project depends on the rich and the pyyaml library.
-Please make sure the're installed before running this program!
+Please make sure they're installed before running this program!
 
 ## Nerd facts
 

@@ -16,14 +16,14 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
         include:
           - os: ubuntu-latest
-            artifact_name: outkatkos-linux
-            binary_path: outkatkos.bin
+            artifact_name: ya_build_wrapper_linux
+            binary_path: ya_build_wrp.bin
           - os: windows-latest
-            artifact_name: outkatkos-windows.exe
-            binary_path: outkatkos.exe
+            artifact_name: ya_build_wrapper.exe
+            binary_path: ya_build_wrp.exe
           - os: macos-latest
-            artifact_name: outkatkos-macos
-            binary_path: outkatkos.bin
+            artifact_name: ya_build_wrapper_macOS
+            binary_path: ya_build_wrp.bin
 
     runs-on: ${{ matrix.os }}
 
@@ -45,15 +45,12 @@ jobs:
       - name: Install Nuitka and Zstandard
         run: |
           python -m pip install --upgrade pip
-          pip install nuitka zstandard
+          pip install nuitka zstandard pyyaml rich
 
-      - name: Go to source folder
-        run: |
-          cd src
-      
       - name: Compile with Nuitka
+        working-directory: ./src
         run: |
-          python -m nuitka --onefile --standalone -o ${{ matrix.binary_path }} builder.py --assume-yes-for-downloads
+          python -m nuitka --onefile --standalone -o ../${{ matrix.binary_path }} builder.py --assume-yes-for-downloads
 
       - name: Upload Binaries to Release
         uses: svenstaro/upload-release-action@v2
@@ -63,3 +60,4 @@ jobs:
           asset_name: ${{ matrix.artifact_name }}
           tag: ${{ github.ref }}
           overwrite: true
+
