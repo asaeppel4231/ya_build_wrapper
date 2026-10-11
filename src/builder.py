@@ -25,12 +25,16 @@ def main():
 
     if args.generate_example_config:
         with open("config.yaml.example", "w") as file:
-            file.write("build:\n  steps:\n    - description: \"Example description\"\n      cmd: \"Your command here \"\n      log_file_name_base: \"logfile name (without .log)\"\n      rwd: \". (Current directory)\"\n      run-in-CI: true / false\n")
+            file.write("build:\n  steps:\n    - description: \"Example description\"\n      cmd: \"Your command here \"\n      log_file_name_base: \"logfile name (without .log)\"\n      rwd: \". (Current directory)\"\n      environment: \"ci / local / both\"\n")
         console.print("config.yaml.example successfully wrote!")
         return
 
     if ci_mode and may_fail_if_build_failed:
         failure_handling.fail_if_ci_build_failed()
+
+    if not args.cfg_input:
+        console.print("Configuration file missing !!!")
+        exit(-1)
 
     prepare_logs_dir()
 

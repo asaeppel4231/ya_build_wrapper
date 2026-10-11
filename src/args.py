@@ -17,6 +17,6 @@ def parse_args():
     parser.add_argument("--fail-if-build-failed", action="store_true", help="Fails CI if last build had errors")
     parser.add_argument("--quiet", action="store_true", help="Disable output to stdout")
     parser.add_argument("--output-job-time-as-json", action="store_true", help="Stores the execution times of the jobs as JSON")
-    parser.add_argument("--cfg-input", help="The path to the build configuration file", required=True)
-    parser.add_argument("--generate-example-config", help="Generates an example configuration")
+    parser.add_argument("--cfg-input", help="The path to the build configuration file")
+    parser.add_argument("--generate-example-config", action="store_true", help="Generates an example configuration")
     return parser.parse_args()

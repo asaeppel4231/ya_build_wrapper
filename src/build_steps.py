@@ -15,8 +15,12 @@ def get_build_steps(yaml_path: str, ci_mode: bool) -> list:
     processed_steps = []
     
     for step in raw_steps:
-        # Skip step if not intended to run in CI
-        if ci_mode and not step.get("run-in-CI", True):
+        env = step.get("environment", "both").lower()
+        
+        if ci_mode and env == "local":
+            continue
+            
+        if not ci_mode and env == "ci":
             continue
             
         description = step.get("description")
@@ -27,4 +31,3 @@ def get_build_steps(yaml_path: str, ci_mode: bool) -> list:
         processed_steps.append((description, cmd, log_base, rwd))
         
     return processed_steps
-
