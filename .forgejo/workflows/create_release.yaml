@@ -1,10 +1,12 @@
-#AI generated
+# AI generated
 
 name: Release
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - 'v*'
+      - 'workflow_test_*'
 
 permissions:
   contents: write
@@ -20,7 +22,7 @@ jobs:
       - name: Install Linux Dependencies
         run: |
           sudo apt update
-          sudo apt install ccache libfuse-dev python3-pip python3-yaml -y
+          sudo apt install ccache libfuse-dev python3-pip python3-yaml jq curl -y
 
       - name: Install Nuitka and Zstandard
         run: |
@@ -30,24 +32,43 @@ jobs:
       - name: Compile with Nuitka
         working-directory: ./src
         run: |
-          python3 -m nuitka --onefile --standalone --include-data-dir=examples=examples -o ../ya_build_wrp_linux_arm64.bin builder.py --assume-yes-for-downloads
+          python3 -m nuitka --onefile --standalone --include-data-dir=../examples=examples -o ../ya_build_wrp_linux_arm64.bin builder.py --assume-yes-for-downloads
 
-      - name: Upload Binary to Forgejo Release
+      - name: Create or Update Forgejo Release & Upload Asset
         run: |
-          echo "Uploading asset to Forgejo Release..."
+          echo "Processing Forgejo Release Automation..."
           
           AUTH_HEADER="Authorization: token ${{ secrets.FORGEJO_TOKEN }}"
           
-          # 1. Ermitteln der Release-ID anhand des aktuellen System-Tags
+          TAG_NAME=$(echo "${GITEA_REF_NAME}" | sed 's|refs/tags/||')
+          echo "Target Tag: ${TAG_NAME}"
+          
+          RELEASE_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" \
+            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${TAG_NAME}")
+          
+          if [ "$RELEASE_CHECK" != "200" ]; then
+            echo "Release for ${TAG_NAME} does not exist yet. Creating it via API..."
+            curl -s -X POST \
+              -H "$AUTH_HEADER" \
+              -H "Content-Type: application/json" \
+              -d "{\"tag_name\": \"${TAG_NAME}\", \"name\": \"Version ${TAG_NAME}\", \"body\": \"Automated binary build for ${TAG_NAME}\", \"draft\": false, \"prerelease\": false}" \
+              "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases"
+          else
+            echo "Release for ${TAG_NAME} already exists."
+          fi
+          
           RELEASE_ID=$(curl -s -H "$AUTH_HEADER" \
-            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${GITEA_REF_NAME}" \
+            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${TAG_NAME}" \
             | jq '.id')
           
-          echo "Found Forgejo Release ID: ${RELEASE_ID}"
+          echo "Target Forgejo Release ID: ${RELEASE_ID}"
           
           curl -X POST \
             -H "$AUTH_HEADER" \
             -H "accept: application/json" \
             -H "Content-Type: multipart/form-data" \
             -F "attachment=@ya_build_wrp_linux_arm64.bin" \
-            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64"
+            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64.bin"
+          
+          echo "Asset successfully uploaded!"
+
