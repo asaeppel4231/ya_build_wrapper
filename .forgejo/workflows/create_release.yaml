@@ -30,7 +30,7 @@ jobs:
           
           AUTH_HEADER="Authorization: token ${{ secrets.FORGEJO_TOKEN }}"
           
-          TAG_NAME=$(echo "${GITEA_REF_NAME}" | sed 's|refs/tags/||')
+          TAG_NAME="${{ forgejo.ref_name }}"
           echo "Target Tag: ${TAG_NAME}"
           
           RELEASE_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" \
@@ -61,4 +61,3 @@ jobs:
             "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64.bin"
           
           echo "Asset successfully uploaded!"
-
