@@ -19,28 +19,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install and Run SCC
+      - name: Run SCC
         run: |
-          echo "Fetching latest scc binary for ARM64 (v4.1.0)..."
-          curl -L -o scc.tar.gz https://github.com/boyter/scc/releases/download/v4.1.0/scc_Linux_arm64.tar.gz
-          
-          mkdir scc_temp
-          tar -xzf scc.tar.gz -C scc_temp
-          sudo mv scc_temp/scc /usr/local/bin/
-          rm -rf scc.tar.gz scc_temp
-          
-          echo "--- SCC Code Statistics ---"
-          scc src/
+          scc src/ # scc is already installed
 
-      - name: Install Testing and Coverage Dependencies
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install pytest pytest-cov interrogate --break-system-packages
-
-      - name: Run Unit Tests with Pytest Coverage
+      # Dependencies already installed
+      - name: Run Tests with Pytest Coverage
         run: |
           pytest --cov=src --cov-report=term-missing || true
 
+      # Dependencies already installed
       - name: Run Interrogate Documentation Check
         run: |
           interrogate src -v || true
