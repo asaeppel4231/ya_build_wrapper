@@ -26,38 +26,102 @@ jobs:
 
       - name: Create or Update Forgejo Release & Upload Asset
         run: |
-          echo "Processing Forgejo Release Automation..."
+          echo "=================================================="
+          echo "🚀 STARTING FORGEJO RELEASE AUTOMATION SCRIPT"
+          echo "=================================================="
+          
+          TAG_NAME="${{ forgejo.ref_name }}"
+          echo "🔍 DEBUG: Target Tag from context is: '${TAG_NAME}'"
+          echo "🔍 DEBUG: Forgejo API URL is:        '${GITEA_API_URL}'"
+          echo "🔍 DEBUG: Forgejo Repository is:     '${GITEA_REPOSITORY}'"
           
           AUTH_HEADER="Authorization: token ${{ secrets.FORGEJO_TOKEN }}"
           
-          TAG_NAME="${{ forgejo.ref_name }}"
-          echo "Target Tag: ${TAG_NAME}"
+          if [ -z "${TAG_NAME}" ] || [ -z "${GITEA_API_URL}" ] || [ -z "${GITEA_REPOSITORY}" ]; then
+            echo "❌ ERROR: One of the core variables is empty! Aborting."
+            exit 1
+          fi
+
+          echo "--------------------------------------------------"
+          echo "📋 STEP 1: CHECKING IF RELEASE ALREADY EXISTS"
+          echo "--------------------------------------------------"
           
-          RELEASE_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" \
-            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${TAG_NAME}")
+          TARGET_URL="${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${TAG_NAME}"
+          echo "📡 DEBUG: Sending GET request to: ${TARGET_URL}"
+          
+          RELEASE_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" "${TARGET_URL}")
+          echo "📥 DEBUG: Forgejo API responded with HTTP Status Code: ${RELEASE_CHECK}"
           
           if [ "$RELEASE_CHECK" != "200" ]; then
-            echo "Release for ${TAG_NAME} does not exist yet. Creating it via API..."
-            curl -s -X POST \
+            echo "➕ INFO: Release for tag '${TAG_NAME}' does not exist yet (Status ${RELEASE_CHECK})."
+            echo "➕ INFO: Creating new release via Forgejo API..."
+            
+            echo "🛠️ DEBUG: Building JSON Payload using jq..."
+            JSON_DATA=$(jq -n \
+              --arg tag "$TAG_NAME" \
+              --arg name "Version $TAG_NAME" \
+              --arg body "Automated binary build for $TAG_NAME" \
+              '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}')
+            
+            echo "🛠️ DEBUG: Generated JSON Content is:"
+            echo "${JSON_DATA}"
+            
+            CREATE_URL="${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases"
+            echo "📡 DEBUG: Sending POST request to: ${CREATE_URL}"
+            
+            CREATE_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
               -H "$AUTH_HEADER" \
               -H "Content-Type: application/json" \
-              -d "{\"tag_name\": \"${TAG_NAME}\", \"name\": \"Version ${TAG_NAME}\", \"body\": \"Automated binary build for ${TAG_NAME}\", \"draft\": false, \"prerelease\": false}" \
-              "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases"
+              -d "$JSON_DATA" \
+              "${CREATE_URL}")
+            
+            echo "📥 DEBUG: Raw API Response from Release Creation:"
+            echo "${CREATE_RESPONSE}"
           else
-            echo "Release for ${TAG_NAME} already exists."
+            echo "✅ INFO: Release for tag '${TAG_NAME}' already exists (Status 200). Skipping creation."
           fi
           
-          RELEASE_ID=$(curl -s -H "$AUTH_HEADER" \
-            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${TAG_NAME}" \
-            | jq '.id')
+          echo "--------------------------------------------------"
+          echo "🆔 STEP 2: FETCHING RELEASE ID FROM FORGEJO"
+          echo "--------------------------------------------------"
           
-          echo "Target Forgejo Release ID: ${RELEASE_ID}"
+          echo "📡 DEBUG: Fetching tag data again to parse ID..."
+          RAW_TAG_DATA=$(curl -s -H "$AUTH_HEADER" "${TARGET_URL}")
           
-          curl -X POST \
+          RELEASE_ID=$(echo "${RAW_TAG_DATA}" | jq '.id' 2>/dev/null)
+          
+          echo "📥 DEBUG: Raw JSON received for ID parsing: ${RAW_TAG_DATA}"
+          echo "🆔 DEBUG: Parsed Release ID is: '${RELEASE_ID}'"
+          
+          if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
+            echo "❌ ERROR: Failed to fetch a valid numerical Release ID from Forgejo API!"
+            echo "❌ ERROR: Cannot proceed to asset upload without an ID. Aborting."
+            exit 1
+          fi
+          
+          echo "--------------------------------------------------"
+          echo "📦 STEP 3: UPLOADING NATIVE ARM64 BINARY ASSET"
+          echo "--------------------------------------------------"
+          
+          if [ ! -f "ya_build_wrp_linux_arm64.bin" ]; then
+            echo "❌ ERROR: Compiled file 'ya_build_wrp_linux_arm64.bin' not found in current workdir!"
+            echo "❌ ERROR: Did Nuitka compilation fail silently? Aborting."
+            exit 1
+          fi
+          
+          UPLOAD_URL="${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64.bin"
+          echo "📡 DEBUG: Uploading file to target URL: ${UPLOAD_URL}"
+          
+          UPLOAD_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
             -H "$AUTH_HEADER" \
             -H "accept: application/json" \
             -H "Content-Type: multipart/form-data" \
             -F "attachment=@ya_build_wrp_linux_arm64.bin" \
-            "${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64.bin"
+            "${UPLOAD_URL}")
           
-          echo "Asset successfully uploaded!"
+          echo "📥 DEBUG: Raw API Response from Asset Upload:"
+          echo "${UPLOAD_RESPONSE}"
+          
+          echo "=================================================="
+          echo "🎉 SUCCESS: Asset successfully processed!"
+          echo "=================================================="
