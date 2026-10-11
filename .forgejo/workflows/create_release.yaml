@@ -19,16 +19,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Linux Dependencies
-        run: |
-          sudo apt update
-          sudo apt install ccache libfuse-dev python3-pip python3-yaml jq curl -y
-
-      - name: Install Nuitka and Zstandard
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install nuitka zstandard rich --break-system-packages || pip install nuitka zstandard rich
-
       - name: Compile with Nuitka
         working-directory: ./src
         run: |
