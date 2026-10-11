@@ -31,13 +31,17 @@ jobs:
           echo "=================================================="
           
           TAG_NAME="${{ forgejo.ref_name }}"
+          REPO_NAME="${{ forgejo.repository }}"
+          
+          API_URL="${{ forgejo.server_url }}"
+          
           echo "🔍 DEBUG: Target Tag from context is: '${TAG_NAME}'"
-          echo "🔍 DEBUG: Forgejo API URL is:        '${GITEA_API_URL}'"
-          echo "🔍 DEBUG: Forgejo Repository is:     '${GITEA_REPOSITORY}'"
+          echo "🔍 DEBUG: Forgejo API URL is:        '${API_URL}'"
+          echo "🔍 DEBUG: Forgejo Repository is:     '${REPO_NAME}'"
           
           AUTH_HEADER="Authorization: token ${{ secrets.FORGEJO_TOKEN }}"
           
-          if [ -z "${TAG_NAME}" ] || [ -z "${GITEA_API_URL}" ] || [ -z "${GITEA_REPOSITORY}" ]; then
+          if [ -z "${TAG_NAME}" ] || [ -z "${API_URL}" ] || [ -z "${REPO_NAME}" ]; then
             echo "❌ ERROR: One of the core variables is empty! Aborting."
             exit 1
           fi
@@ -46,7 +50,7 @@ jobs:
           echo "📋 STEP 1: CHECKING IF RELEASE ALREADY EXISTS"
           echo "--------------------------------------------------"
           
-          TARGET_URL="${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/tags/${TAG_NAME}"
+          TARGET_URL="${API_URL}/api/v1/repos/${REPO_NAME}/releases/tags/${TAG_NAME}"
           echo "📡 DEBUG: Sending GET request to: ${TARGET_URL}"
           
           RELEASE_CHECK=$(curl -s -o /dev/null -w "%{http_code}" -H "$AUTH_HEADER" "${TARGET_URL}")
@@ -63,10 +67,7 @@ jobs:
               --arg body "Automated binary build for $TAG_NAME" \
               '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}')
             
-            echo "🛠️ DEBUG: Generated JSON Content is:"
-            echo "${JSON_DATA}"
-            
-            CREATE_URL="${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases"
+            CREATE_URL="${API_URL}/api/v1/repos/${REPO_NAME}/releases"
             echo "📡 DEBUG: Sending POST request to: ${CREATE_URL}"
             
             CREATE_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
@@ -75,8 +76,7 @@ jobs:
               -d "$JSON_DATA" \
               "${CREATE_URL}")
             
-            echo "📥 DEBUG: Raw API Response from Release Creation:"
-            echo "${CREATE_RESPONSE}"
+            echo "📥 DEBUG: Raw API Response from Release Creation: ${CREATE_RESPONSE}"
           else
             echo "✅ INFO: Release for tag '${TAG_NAME}' already exists (Status 200). Skipping creation."
           fi
@@ -89,13 +89,10 @@ jobs:
           RAW_TAG_DATA=$(curl -s -H "$AUTH_HEADER" "${TARGET_URL}")
           
           RELEASE_ID=$(echo "${RAW_TAG_DATA}" | jq '.id' 2>/dev/null)
-          
-          echo "📥 DEBUG: Raw JSON received for ID parsing: ${RAW_TAG_DATA}"
           echo "🆔 DEBUG: Parsed Release ID is: '${RELEASE_ID}'"
           
           if [ "$RELEASE_ID" = "null" ] || [ -z "$RELEASE_ID" ]; then
             echo "❌ ERROR: Failed to fetch a valid numerical Release ID from Forgejo API!"
-            echo "❌ ERROR: Cannot proceed to asset upload without an ID. Aborting."
             exit 1
           fi
           
@@ -103,13 +100,7 @@ jobs:
           echo "📦 STEP 3: UPLOADING NATIVE ARM64 BINARY ASSET"
           echo "--------------------------------------------------"
           
-          if [ ! -f "ya_build_wrp_linux_arm64.bin" ]; then
-            echo "❌ ERROR: Compiled file 'ya_build_wrp_linux_arm64.bin' not found in current workdir!"
-            echo "❌ ERROR: Did Nuitka compilation fail silently? Aborting."
-            exit 1
-          fi
-          
-          UPLOAD_URL="${GITEA_API_URL}/api/v1/repos/${GITEA_REPOSITORY}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64.bin"
+          UPLOAD_URL="${API_URL}/api/v1/repos/${REPO_NAME}/releases/${RELEASE_ID}/assets?name=ya_build_wrapper_linux_arm64.bin"
           echo "📡 DEBUG: Uploading file to target URL: ${UPLOAD_URL}"
           
           UPLOAD_RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X POST \
@@ -119,9 +110,8 @@ jobs:
             -F "attachment=@ya_build_wrp_linux_arm64.bin" \
             "${UPLOAD_URL}")
           
-          echo "📥 DEBUG: Raw API Response from Asset Upload:"
-          echo "${UPLOAD_RESPONSE}"
-          
+          echo "📥 DEBUG: Raw API Response from Asset Upload: ${UPLOAD_RESPONSE}"
           echo "=================================================="
           echo "🎉 SUCCESS: Asset successfully processed!"
           echo "=================================================="
+
