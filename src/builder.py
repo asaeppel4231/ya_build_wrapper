@@ -16,32 +16,42 @@ import fail_file as failure_handling
 from timings import *
 from utils import *
 
+import locale
+
+import i18n
+
 def main():
     args = arg_handling.parse_args()
 
-    ci_mode = args.ci
-    may_fail_if_build_failed = args.fail_if_build_failed
-    quiet = args.quiet
-
+    language = locale.getlocale()[0]
+    language = language[:2] if language else "en"
+    
     if args.generate_example_config:
-        with open("config.yaml.example", "w") as file:
-            file.write("build:\n  steps:\n    - description: \"Example description\"\n      cmd: \"Your command here \"\n      log_file_name_base: \"logfile name (without .log)\"\n      rwd: \". (Current directory)\"\n      environment: \"ci / local / both\"\n")
-        console.print("config.yaml.example successfully wrote!")
+        try:
+            with open("examples/config.yaml", "r", encoding="utf-8") as template_file:
+                example_content = template_file.read()
+            
+            with open("config.yaml.example", "w", encoding="utf-8") as file:
+                file.write(example_content)
+            
+            console.print(i18n.information_texts[language]["example_config_written"])
+        except FileNotFoundError:
+            console.print(i18n.error_texts[language]["template_file_nf"])
         return
 
-    if ci_mode and may_fail_if_build_failed:
+    if args.ci and args.fail_if_build_failed:
         failure_handling.fail_if_ci_build_failed()
 
     if not args.cfg_input:
-        console.print("Configuration file missing !!!")
+        console.print(i18n.error_texts[language]["config_nf"])
         exit(-1)
 
-    prepare_logs_dir()
+    prepare_logs_dir(args.ci)
 
     if not args.quiet:
-        console.print(Panel("Starting Build", title=datetime.ctime(datetime.now()), style="bold magenta"))
+        console.print(Panel(i18n.information_texts[language]["start_build"], title=datetime.ctime(datetime.now()), style="bold magenta"))
 
-    timings = [] if not ci_mode else None
+    timings = [] if not args.ci else None
     steps = build_steps.get_build_steps(args.cfg_input, args.ci)
 
     for title, command, logfile, cwd in steps:
@@ -53,14 +63,14 @@ def main():
             command,
             logfile,
             cwd,
-            ci_mode,
+            args.ci,
             timings,
             auto_fail=cmd_tries_to_call_build_script(command),
-            quiet=quiet,
+            quiet=args.quiet,
         )
 
     if not args.quiet:
-        console.print(Panel("Build Completed Successfully!", title=datetime.ctime(datetime.now()), style="bold green"))
+        console.print(Panel(i18n.information_texts[language]["finish_build"], title=datetime.ctime(datetime.now()), style="bold green"))
 
     if timings and not args.quiet:
         print_timing_summary(timings)

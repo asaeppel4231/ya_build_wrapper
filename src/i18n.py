@@ -1,0 +1,101 @@
+
+argument_help_texts = {
+    "en": {
+        # args.py
+        "--ci": "Enable CI mode",
+        "--fail-if-build-failed": "Fails CI if last build had errors",
+        "--quiet": "Disable output to stdout",
+        "--output-job-time-as-json": "Stores the execution times of the jobs as JSON",
+        "--cfg-input": "The path to the build configuration file",
+        "--generate-example-config": "Generates an example configuration"
+        # end
+    },
+    "de": {
+        # args.py
+        "--ci": "Aktiviert den continous integration Modus",
+        "--fail-if-build-failed": "Wirft einen Fehler, wenn das letzte Bauen mit einem Fehler abgeschlossen wurde",
+        "--quiet": "Deaktiviert die Ausgabe auf der Standardausgabe",
+        "--output-job-time-as-json": "Speichert die Ausführungszeiten der Aufgaben in einer JSON-Datei",
+        "--cfg-input": "Legt den Pfad zur Konfigurationsdatei fest",
+        "--generate-example-config": "Generiert eine Beispielkonfiguration"
+        # end
+    }
+        
+}
+
+error_texts = {
+    "en": {
+        # builder.py
+        "template_file_nf": "[bold red]Error: Template file examples/config.yaml not found![/bold read]",
+        "config_nf": "Configuration file missing!",
+        # end
+        # fail_file.py
+        "ci_failed": "In directory {dir}: Command {command} failed with return code {retcode}.",
+        # end
+        # utils.py
+        "invalid_input": "Invalid input!"
+        # end
+    },
+    "de": {
+        # builder.py
+        "template_file_nf": "[bold red]Fehler: Vorlagendatei examples/config.yaml nicht gefunden![/bold red]",
+        "config_nf": "Konfigurationsdatei fehlt!",
+        # end
+        # fail_file.py
+        "ci_failed": "In Verzeichnis {dir}: Befehl {command} fehlgeschlagen mit Rückgabewert {retcode}.",
+        # end
+        # utils.py
+        "invalid_input": "Ungültige Eingabe!"
+        # end
+    }
+}
+
+information_texts = {
+    "en": {
+        # builder.py
+        "start_build": "Starting Build",
+        "finish_build": "Build Completed Successfully!",
+        "example_config_written": "[bold green]config.yaml.example successfully wrote[/bold green]",
+        # end
+        # utils.py
+        "done_simple": "[bold green]DONE[/bold green]\n",
+        "done_with_timings": "[bold green]DONE ({duration}s)[/bold green]\n",
+        "step_failed": "[bold red]FAILED (exit code {retcode})[/bold red]",
+        "proceed_rm_logs_dir": "Do you really want to proceed removing the logs directory? (Yes/No):",
+        # end
+        # timings.py
+        "timings_panel": "Timing Summary\n\nTotal time: {total}\nAverage per step: {avg}\nLongest step: {longest_title} ({longest_time}s)",
+        "timings_panel_title": "Performance",
+        "timings_written": "[bold green]Wrote job_time.json[/bold green]"
+        # end
+    },
+    "de": {
+        # builder.py
+        "start_build": "Bauen gestartet",
+        "finish_build": "Bauen erfolgreich abgeschlossen!",
+        "example_config_written": "[bold green]config.yaml.example erfolgreich geschrieben[/bold green]",
+        # end
+        # utils.py
+        "done_simple": "[bold green]ERLEDIGT[/bold green]\n",
+        "done_with_timings": "[bold green]ERLEDIGT ({duration}s)[/bold green]\n",
+        "step_failed": "[bold red]FEHLGESCHLAGEN (Rückgabewert {retcode})[/bold red]",
+        "proceed_rm_logs_dir": "Willst du wirklich fortfahren und den logs-Ordner löschen? (Ja/Nein):",
+        # end
+        # timings.py
+        "timings_panel": "Ausführzeitenzusammenfassung\n\nGesamtzeit: {total}\nDurchschnitt pro Schritt: {avg}\nLängster Schritt: {longest_title} ({longest_time}s)",
+        "timings_panel_title": "Ausführzeiten",
+        "timings_written": "[bold green]job_time.json geschrieben[/bold green]"
+        # end
+    }
+}
+
+answers_remove_log_dir = {
+    "en": {
+        "yes": "yes",
+        "no": "no"
+    },
+    "de": {
+        "yes": "ja",
+        "no": "nein"
+    }
+}

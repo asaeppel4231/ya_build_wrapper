@@ -50,7 +50,7 @@ jobs:
       - name: Compile with Nuitka
         working-directory: ./src
         run: |
-          python -m nuitka --onefile --standalone -o ../${{ matrix.binary_path }} builder.py --assume-yes-for-downloads
+          python -m nuitka --onefile --standalone --include-data-dir=examples=examples -o ../${{ matrix.binary_path }} builder.py --assume-yes-for-downloads
 
       - name: Upload Binaries to Release
         uses: svenstaro/upload-release-action@v2

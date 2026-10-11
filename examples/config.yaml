@@ -1,0 +1,7 @@
+build:
+  steps:
+    - description: "Example description"
+      cmd: "Your command here "
+      log_file_name_base: "logfile name (without .log)"
+      rwd: ". (Current directory)"
+      environment: "ci / local / both"

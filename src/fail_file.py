@@ -7,6 +7,9 @@
 
 import sys
 import os
+import locale
+
+import i18n
 
 FAIL_PATH = "FAIL"
 
@@ -55,13 +58,8 @@ def fail_if_ci_build_failed():
     if fail is None:
         return
 
-    print(
-        "In directory "
-        + fail["workdir"]
-        + " : Command "
-        + fail["command"]
-        + " failed with return code "
-        + str(fail["returncode"])
-        + " ."
-    )
+    language = locale.getlocale()[0][:2]
+    
+    print(i18n.error_texts[language]["ci_failed"].format(dir=fail["workdir"], command=fail["command"], retcode=str(fail["returncode"])))
     sys.exit(-1)
+

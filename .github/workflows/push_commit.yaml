@@ -1,0 +1,53 @@
+# AI generated
+
+name: Check code quality
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install and Run SCC
+        run: |
+          echo "Fetching latest scc binary (v4.1.0)..."
+          curl -L -o scc.tar.gz https://github.com/boyter/scc/releases/download/v4.1.0/scc_Linux_x86_64.tar.gz
+          
+          mkdir scc_temp
+          tar -xzf scc.tar.gz -C scc_temp
+          
+          sudo mv scc_temp/scc /usr/local/bin/
+          
+          rm -rf scc.tar.gz scc_temp
+          
+          echo "--- SCC Code Statistics ---"
+          scc src/
+
+      - name: Install Testing and Coverage Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov interrogate pyyaml rich
+
+      - name: Run Unit Tests with Pytest Coverage
+        run: |
+          pytest --cov=src --cov-report=term-missing || true
+
+      - name: Run Interrogate Documentation Check
+        run: |
+          interrogate src -v || true

@@ -15,6 +15,10 @@ import shutil
 import fail_file as failure_handling
 from datetime import datetime
 
+import locale
+
+import i18n
+
 LOGS_DIR = "logs"
 
 console = Console()
@@ -41,12 +45,25 @@ def command_exists(command: str) -> bool:
     return shutil.which(first) is not None
 
 
-def prepare_logs_dir():
+def prepare_logs_dir(ci_mode: int):
     """Ensure a clean logs directory."""
+        
+    language = locale.getlocale()[0]
+    language = language[:2] if language else "en"
+
     if os.path.exists(LOGS_DIR):
+        if not ci_mode:
+            answer: str = ""
+            while True:
+                answer = input(i18n.information_texts[language]["proceed_rm_logs_dir"])
+                if answer.lower() == i18n.answers_remove_log_dir[language]["yes"]:
+                    break
+                elif answer.lower() == i18n.answers_remove_log_dir[language]["no"]:
+                    sys.exit(-1)
+                else:
+                    print(i18n.error_texts[language]["invalid_input"])
         shutil.rmtree(LOGS_DIR)
     os.mkdir(LOGS_DIR)
-
 
 def cleanup_empty_logs(logfile: str):
     """Prevents that empty files are stored in the logs (ZIP file) of the CI."""
@@ -81,11 +98,14 @@ def execute_command(command: str, logfile: str, cwd: str | None) -> int:
 
 def print_done(ci_mode: int, duration: float):
     """Print DONE message."""
-    if ci_mode:
-        console.print("[bold green]DONE[/bold green]\n")
-    else:
-        console.print(f"[bold green]DONE ({duration:.2f}s)[/bold green]\n")
 
+    language = locale.getlocale()[0]
+    language = language[:2] if language else "en"
+    
+    if ci_mode:
+        console.print(i18n.information_texts[language]["done_simple"])
+    else:
+        console.print(i18n.information_texts[language]["done_with_timings"].format(duration=f"{duration:.2f}"))
 
 def run_step(
     title: str,
@@ -104,12 +124,16 @@ def run_step(
     if not quiet:
         console.print(Panel(title, title=datetime.ctime(datetime.now()), style="bold blue"))
 
+
+    language = locale.getlocale()[0]
+    language = language[:2] if language else "en"
+
     start_time = time.time()
     returncode = execute_command(command, logfile, cwd)
 
     if returncode != 0 or auto_fail:
         if not quiet:
-            console.print(f"[bold red]FAILED (exit code {returncode})[/bold red]")
+            console.print(i18n.information_texts[language]["step_failed"].format(retcode=returncode))
         if ci_mode:
             failure_handling.write_fail_file(returncode, command, cwd)
         else:

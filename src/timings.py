@@ -9,10 +9,17 @@ import json
 import os
 from utils import console, Panel
 
+import locale
+
+import i18n
+
 def print_timing_summary(timings: list[tuple[str, float]]):
     """Print timing summary."""
     if not timings:
         return
+
+    language = locale.getlocale()[0]
+    language = language[:2] if language else "en"
 
     total = sum(t for _, t in timings)
     avg = total / len(timings)
@@ -20,11 +27,8 @@ def print_timing_summary(timings: list[tuple[str, float]]):
 
     console.print(
         Panel(
-            f"Timing Summary\n\n"
-            f"Total time: {total:.2f}s\n"
-            f"Average per step: {avg:.2f}s\n"
-            f"Longest step: {longest_title} ({longest_time:.2f}s)",
-            title="Performance",
+            i18n.information_texts[language]["timings_panel"].format(total=f"{total:.2f}", avg=f"{avg:.2f}", longest_title=longest_title, longest_time=f"{longest_time:.2f}"),
+            title=i18n.information_texts[language]["timings_panel_title"],
             style="bold cyan",
         )
     )
@@ -36,11 +40,14 @@ def write_timings(timings: list[tuple[str, float]], quiet: bool = False):
         for title, duration in timings
     ]
 
+    language = locale.getlocale()[0]
+    language = language[:2] if language else "en"
+
     with open("job_time.json", "w") as fp:
         json.dump(data, fp, indent=4)
 
     if not quiet:
-        console.print("[bold green]Wrote job_time.json[/bold green]")
+        console.print(i18n.information_texts[language]["timings_written"])
 
 def load_timings() -> list[dict]:
     """Load job timing information from job_time.json."""
