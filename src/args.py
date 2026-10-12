@@ -7,6 +7,7 @@
 
 import argparse
 import locale
+import sys
 
 import i18n
 
@@ -25,7 +26,7 @@ def parse_args():
 
     if not language or language not in i18n.argument_help_texts:
         print("Unsupported language detected !")
-        exit(-1)
+        sys.exit(-1)
     
     _add_argument(parser, language, "--ci", "store_true")
     _add_argument(parser, language, "--fail-if-build-failed", "store_true")

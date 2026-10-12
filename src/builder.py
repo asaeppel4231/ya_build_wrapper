@@ -44,7 +44,7 @@ def main():
 
     if not args.cfg_input:
         console.print(i18n.error_texts[language]["config_nf"])
-        exit(-1)
+        sys.exit(-1)
 
     prepare_logs_dir(args.ci)
 
