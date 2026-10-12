@@ -20,9 +20,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Compile with Nuitka
-        working-directory: ./src
         run: |
-          python3 -m nuitka --onefile --standalone --include-data-dir=../examples=examples -o ../ya_build_wrp_linux_arm64.bin builder.py --assume-yes-for-downloads
+          python3 -m nuitka --onefile --standalone --include-data-dir=examples=examples -o ya_build_wrp_linux_arm64.bin src/builder.py --assume-yes-for-downloads
 
       - name: Create or Update Forgejo Release & Upload Asset
         run: |
