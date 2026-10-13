@@ -18,3 +18,4 @@ def test_parse_args_unsupported_language(monkeypatch, capsys):
 
         captured = capsys.readouterr()
         assert "Unsupported" in captured.out and "language" in captured.out and "detected" in captured.out
+

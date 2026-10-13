@@ -23,9 +23,20 @@ Please make sure they're *installed* before running this program!
 
 ## Nerd facts
 
-- *Lines of Code*: 229
-- *Complexity*: 58
-- *Lines of Code per Complexity*: 3,948275862
+"Real" source code:
+
+- *Lines of Code*: 334
+- *Complexity*: 84
+- *Lines of Code per Complexity*: 3,976190476
+
+Test code:
+
+- *Lines of Code*: 100
+- *Complexity*: 12
+- *Lines of Code pder Complexity*: 8,333333333
+
+Misc:
+
 - *Current version*: 0.2
 
 ## Native executable

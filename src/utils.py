@@ -32,14 +32,31 @@ console = Console()
 # ---------------------------------------------------------------------------
 
 def cmd_tries_to_call_build_script(command: str) -> bool:
-    """Return True if the command tries to call this build script."""
-    return (
-        command.find(sys.argv[0]) != -1
-        or command.find(os.path.abspath(sys.argv[0])) != -1
-        if command
-        else False
-    )
+    """Return True if the command tries to call this build script instance.
+       Dislaimer: This function is not perfect !!! """
+    if not command:
+        return False
 
+    try:
+        current_script_path = os.path.realpath(os.path.abspath(sys.argv[0]))
+    except Exception:
+        return False
+
+    cmd_parts = command.split(" ")
+    
+    executable_path = cmd_parts[0]
+    
+    if len(cmd_parts) > 1 and (os.path.basename(executable_path) in ["python", "python3"]):
+        executable_path = cmd_parts[1]
+
+    executable_path_absolute = os.path.realpath(os.path.abspath(executable_path))
+
+    if os.path.isfile(executable_path_absolute):
+        part_absolute = os.path.realpath(os.path.abspath(executable_path))
+        if part_absolute == current_script_path:
+            return True
+                
+    return False
 
 def command_exists(command: str) -> bool:
     """Check if the first token of the command exists in PATH."""
