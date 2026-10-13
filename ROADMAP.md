@@ -1,9 +1,13 @@
 # Roadmap
 
+## Version 0.4
+
+- [ ] Rewrite in Go, C or C++?
+
 ## Version 0.3
 
 - [x] internationalized strings (english & german)
 - [x] Example configuration embedded instead of hardcoded in the builder.py
-- [ ] Add documentation
-- [ ] Add tests?
+- [x] Add documentation
+- [ ] Add tests
 
