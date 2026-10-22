@@ -19,6 +19,9 @@ See the [ROADMAP.md](ROADMAP.md) file of this repository.
 ## Dependencies
 
 This project depends on the **rich** and the **pyyaml** library.
+
+If you want to test the code, you need the **pytest** library, too.
+
 Please make sure they're *installed* before running this program!
 
 ## Nerd facts
@@ -46,15 +49,15 @@ You can download them at the *release page* of this repository in **Github**.
 
 ## Example
 
-Run this program with **"--generate-example-config"** to get an **example** *build task configuration*.
+Run this program with **"--generate-example-config"** to get an **example** *build task configuration* (it will be stored as a local config.yaml.example).
 
 ## Usage
 
 Once you wrote your build task configuration, you can start *ya_build_wrapper* with *"--cfg-input PATH-TO-YOUR-BUILD-TASK-CONFIGURATION"* and it runs.
 
 
-Also, if you are **in CI mode** and one of the steps failed, *ya_build_wrapper* writes a **"FAIL-file"**.
+Also, if you are **in CI mode** and one of the build steps failed, *ya_build_wrapper* writes a **"FAIL file"**.
 It **contains plaintext informations** on *which command the task executed* and *which return type it had*.
 
-If that **"FAIL-file"** exists, you can start this program with *"--fail-if-build-failed"*, so your **workflow stops running if one step failed**.
+If that **"FAIL file"** exists, you can start this program with *"--fail-if-build-failed"*, so your **workflow stops running if one step failed**.
 
