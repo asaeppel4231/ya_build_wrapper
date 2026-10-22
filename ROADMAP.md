@@ -9,5 +9,5 @@
 - [x] internationalized strings (english & german)
 - [x] Example configuration embedded instead of hardcoded in the builder.py
 - [x] Add documentation
-- [ ] Add tests
+- [x] Add tests
 
